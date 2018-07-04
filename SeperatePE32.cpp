@@ -14,6 +14,7 @@ int main(int argc, TCHAR** argv)
 	HANDLE hTargetFile = INVALID_HANDLE_VALUE;
 	DWORD lpNumberOfBytesRead = 0;
 	DWORD elfanew = 0;
+	DWORD bitFlag = 0;
 
 	PBYTE lpMem = NULL;
 
@@ -51,6 +52,8 @@ int main(int argc, TCHAR** argv)
 
 	do
 	{
+		bitFlag = 0;
+
 		// exclusive directory
 		if(lpFileData.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY)
 		{
@@ -92,26 +95,28 @@ int main(int argc, TCHAR** argv)
 			if( pNtHeader->OptionalHeader.Magic == 0x020B)
 			{
 				// PE32+
+				bitFlag = 64;
 				sprintf(copyFile, "%s\\64_%s", dumpDir, lpFileData.cFileName);
 				if(!CopyFile(targetFileName, copyFile, FALSE))
 				{
-					printf(" Fail to CopyFile.\n");
+					printf(" Fail to CopyFile. - %08X\n", GetLastError());
 					return -1;
 				}
 			}
 			else
 			{
 				// PE32
+				bitFlag = 32;
 				sprintf(copyFile, "%s\\32_%s", dumpDir, lpFileData.cFileName);
 				if(!CopyFile(targetFileName, copyFile, FALSE))
 				{
-					printf(" Fail to CopyFile.\n");
+					printf(" Fail to CopyFile. - %08X\n", GetLastError());
 					return -1;
 				}
 			}
 
 			VirtualFree(lpMem, 0x1000, MEM_RELEASE);
-			printf(" Classification file : %s\n", lpFileData.cFileName);
+			printf(" Classification file : %s - %d\n", lpFileData.cFileName, bitFlag);
 		}		
 
 	}while(FindNextFile(hFindFirstFile, &lpFileData));
